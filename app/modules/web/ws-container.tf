@@ -2,7 +2,7 @@
 resource "aws_instance" "ws-container" {
     ami = "ami-032598fcc7e9d1c7a"
     instance_type = "t2.micro"
-    security_group = [aws_security_group.web_serverSG.name]
+    security_group = [module.sg.sg_name]
 
     connection {
         type = "ssh"
@@ -16,30 +16,21 @@ resource "aws_instance" "ws-container" {
     }
 }
 
+module "eip" {
+    source = "../elastic_ip"
+    instance_id = aws_instance.web.id
+}
 
-# Resource: Security Group
-resource "aws_security_group" "web_serverSG" {
-    name = "allow-HTTP"
+# Deleted thank to line 21
+// output "instance_id" {
+//     value = aws_instance.web.id
+// }
 
-    dynamic "ingress" {
-        iterator = port
-        for_each = var.ingress_rules
-        content {
-            to_port = port.value
-            from_port = port.value
-            protocol = "TCP"
-            cidr_block = ["0.0.0.0/0"]
-        }
-    }
+module "sg" {
+    source = "../security_group"
+    instance_id = 
+}
 
-    dynamic "egress" {
-        iterator = port
-        for_each = var.egress_rules
-        content {
-            to_port = port.value
-            from_port = port.value
-            protocol = "TCP"
-            cidr_block = ["0.0.0.0/0"]
-        }
-    }
+output "pub_ip" {
+    value = module.eip.public_ip
 }
